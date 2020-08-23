@@ -144,42 +144,78 @@ namespace FlvInteractiveRebase
 
             int index = 0;
             var memoryStream = new MemoryStream();
-            file.Tags.AddRange(tags.Select(x =>
+            file.Tags.AddRange(tags.Select(input_tag =>
             {
-                if (x.TagType == TagType.Script)
+                FlvInteractiveRebaseCommandFile.FlvTag result;
+                if (input_tag.TagType == TagType.Script)
                 {
                     memoryStream.SetLength(0);
-                    FlvWriter.WriteTagData(memoryStream, flv_stream, x);
+                    FlvWriter.WriteTagData(memoryStream, flv_stream, input_tag);
                     memoryStream.Position = 0;
                     var body = ScriptTagBody.Parse(memoryStream);
                     var json = body.ToJson();
-                    return new FlvInteractiveRebaseCommandFile.FlvTag
+                    result = new FlvInteractiveRebaseCommandFile.FlvTag
                     {
                         Command = FlvInteractiveRebaseCommandFile.FlvTagCommand.Script,
                         Index = index++,
-                        TimeStamp = TimeSpan.FromMilliseconds(x.TimeStamp),
+                        TimeStamp = TimeSpan.FromMilliseconds(input_tag.TimeStamp),
                         Value = json,
-                        Size = x.TagSize,
-                        Offset = x.Position,
-                        Type = x.TagType,
-                        Header = x.Flag.HasFlag(TagFlag.Header),
-                        Keyframe = x.Flag.HasFlag(TagFlag.Keyframe),
+                        Size = input_tag.TagSize,
+                        Offset = input_tag.Position,
+                        Type = input_tag.TagType,
+                        Header = input_tag.Flag.HasFlag(TagFlag.Header),
+                        Keyframe = input_tag.Flag.HasFlag(TagFlag.Keyframe),
                     };
                 }
                 else
                 {
-                    return new FlvInteractiveRebaseCommandFile.FlvTag
+                    result = new FlvInteractiveRebaseCommandFile.FlvTag
                     {
                         Command = FlvInteractiveRebaseCommandFile.FlvTagCommand.Pick,
                         Index = index++,
-                        TimeStamp = TimeSpan.FromMilliseconds(x.TimeStamp),
-                        Size = x.TagSize,
-                        Offset = x.Position,
-                        Type = x.TagType,
-                        Header = x.Flag.HasFlag(TagFlag.Header),
-                        Keyframe = x.Flag.HasFlag(TagFlag.Keyframe),
+                        TimeStamp = TimeSpan.FromMilliseconds(input_tag.TimeStamp),
+                        Size = input_tag.TagSize,
+                        Offset = input_tag.Position,
+                        Type = input_tag.TagType,
+                        Header = input_tag.Flag.HasFlag(TagFlag.Header),
+                        Keyframe = input_tag.Flag.HasFlag(TagFlag.Keyframe),
                     };
                 }
+
+                if (result.Type == TagType.Video && opts.ShowNalu)
+                {
+                    var b = new byte[4];
+                    flv_stream.Seek(result.Offset + 11, SeekOrigin.Begin);
+                    if ((flv_stream.ReadByte() & 0x0F) == 7 && flv_stream.ReadByte() == 1)
+                    {
+                        result.Nalus = new List<FlvInteractiveRebaseCommandFile.FlvNalu>();
+                        var end = result.Offset + 11 + result.Size;
+
+                        flv_stream.Seek(3, SeekOrigin.Current);
+
+                        while (true)
+                        {
+                            if (4 != flv_stream.Read(b)) break;
+                            var size = BitConverter.ToUInt32(b.ToBE(), 0);
+                            var type = flv_stream.ReadByte() & 0b00011111;
+                            flv_stream.Seek(size - 1, SeekOrigin.Current);
+
+                            result.Nalus.Add(new FlvInteractiveRebaseCommandFile.FlvNalu { Size = size, Type = type });
+
+                            if (flv_stream.Position == end)
+                            {
+                                break;
+                            }
+                            else if (flv_stream.Position > end)
+                            {
+                                Console.WriteLine($"Nalu Warning: out of range. Offset: {result.Offset}, Nalu No: {result.Nalus.Count + 1}, Pos: {flv_stream.Position}");
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                return result;
             }));
 
             using (var writer = new StreamWriter(fib.Open(FileMode.Create, FileAccess.ReadWrite, FileShare.None), new UTF8Encoding(false)))

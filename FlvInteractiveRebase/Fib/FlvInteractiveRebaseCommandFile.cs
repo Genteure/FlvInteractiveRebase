@@ -132,6 +132,9 @@ Keyframe 为 true 时说明这是个关键帧
             [XmlAttribute("Raw"), DefaultValue("")]
             public string FromTagPath { get; set; } = string.Empty;
 
+            [XmlElement("Nalu")]
+            public List<FlvNalu> Nalus { get; set; } = new List<FlvNalu>();
+
             [XmlIgnore]
             public TagFrom From
             {
@@ -144,6 +147,15 @@ Keyframe 为 true 时说明这是个关键帧
                     return TagFrom.Main;
                 }
             }
+        }
+
+        [XmlType("Nalu")]
+        public class FlvNalu
+        {
+            [XmlAttribute]
+            public int Type { get; set; }
+            [XmlAttribute]
+            public uint Size { get; set; }
         }
 
         public enum TagFrom

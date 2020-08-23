@@ -28,6 +28,9 @@ namespace FlvInteractiveRebase
 
             [Option('q', "quite", Default = false, HelpText = "不打印日志到控制台")]
             public bool Quite { get; set; } = false;
+
+            [Option("show-nalu", Default = false, Hidden = true)]
+            public bool ShowNalu { get; set; } = false;
         }
 
         [Verb("build", HelpText = "用 fib.xml 来构建一个 FLV 文件")]
