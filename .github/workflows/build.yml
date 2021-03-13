@@ -10,7 +10,6 @@ env:
 
 jobs:
   build:
-    needs: test
     strategy:
       matrix:
         rid: [any, linux-arm, linux-arm64, linux-x64, osx-x64, win-x64]
