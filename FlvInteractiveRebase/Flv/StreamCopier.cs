@@ -7,8 +7,7 @@ namespace FlvInteractiveRebase.Flv
     internal static class StreamCopier
     {
         private const int BUFFER_SIZE = 4 * 1024;
-        private static readonly byte[] buffer = new byte[BUFFER_SIZE];
-        private static readonly SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
+        private static readonly ThreadLocal<byte[]> t_buffer = new ThreadLocal<byte[]>(() => new byte[BUFFER_SIZE]);
 
         public static int SkipBytes(this Stream stream, int length)
         {
@@ -27,26 +26,19 @@ namespace FlvInteractiveRebase.Flv
                 return 0;
             }
 
-            try
-            {
-                int total = 0;
-                semaphoreSlim.Wait();
+            var buffer = t_buffer.Value!;
+            int total = 0;
 
-                while (length > BUFFER_SIZE)
-                {
-                    var read = stream.Read(buffer, 0, BUFFER_SIZE);
-                    total += read;
-                    if (read != BUFFER_SIZE) { return total; }
-                    length -= BUFFER_SIZE;
-                }
-
-                total += stream.Read(buffer, 0, length);
-                return total;
-            }
-            finally
+            while (length > BUFFER_SIZE)
             {
-                semaphoreSlim.Release();
+                var read = stream.Read(buffer, 0, BUFFER_SIZE);
+                total += read;
+                if (read != BUFFER_SIZE) { return total; }
+                length -= BUFFER_SIZE;
             }
+
+            total += stream.Read(buffer, 0, length);
+            return total;
         }
 
         public static bool CopyBytes(this Stream from, Stream to, int length)
@@ -58,32 +50,25 @@ namespace FlvInteractiveRebase.Flv
             if (!from.CanRead) { throw new ArgumentException("cannot read stream", nameof(from)); }
             if (!to.CanWrite) { throw new ArgumentException("cannot write stream", nameof(to)); }
 
-            try
+            var buffer = t_buffer.Value!;
+
+            while (length > BUFFER_SIZE)
             {
-                semaphoreSlim.Wait();
-
-                while (length > BUFFER_SIZE)
-                {
-                    if (BUFFER_SIZE != from.Read(buffer, 0, BUFFER_SIZE))
-                    {
-                        return false;
-                    }
-                    to.Write(buffer, 0, BUFFER_SIZE);
-                    length -= BUFFER_SIZE;
-                }
-
-                if (length != from.Read(buffer, 0, length))
+                if (BUFFER_SIZE != from.Read(buffer, 0, BUFFER_SIZE))
                 {
                     return false;
                 }
-                to.Write(buffer, 0, length);
+                to.Write(buffer, 0, BUFFER_SIZE);
+                length -= BUFFER_SIZE;
+            }
 
-                return true;
-            }
-            finally
+            if (length != from.Read(buffer, 0, length))
             {
-                semaphoreSlim.Release();
+                return false;
             }
+            to.Write(buffer, 0, length);
+
+            return true;
         }
     }
 }

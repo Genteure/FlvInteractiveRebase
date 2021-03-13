@@ -43,6 +43,7 @@ namespace FlvInteractiveRebase.Amf
                     {
                         IScriptDataValue.EcmaArray value => value,
                         IScriptDataValue.Object value => value,
+                        IScriptDataValue any => throw new AmfException($"type of ScriptTagBody.Value ({any.Type}) is not supported"),
                         _ => throw new AmfException("type of ScriptTagBody.Value is not supported"),
                     })
                 };

@@ -23,7 +23,7 @@ namespace FlvInteractiveRebase
             [Option('f', "force", Default = false, HelpText = "覆盖输出位置的文件")]
             public bool Overwrite { get; set; } = false;
 
-            [Option("skip-hash", Default = false, HelpText = "不检查 FLV 文件的 Hash")]
+            [Option("skip-hash", Default = true, HelpText = "不检查 FLV 文件的 Hash")]
             public bool SkipHash { get; set; } = false;
 
             [Option('q', "quite", Default = false, HelpText = "不打印日志到控制台")]

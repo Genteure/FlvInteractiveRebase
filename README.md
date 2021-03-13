@@ -4,7 +4,11 @@
 
 ## 用法
 
-[Bililive/BililiveRecorder#103](https://github.com/Bililive/BililiveRecorder/issues/103) 回头再写这个 README
+```bash
+.\FlvInteractiveRebase.exe parse input.flv tags.xml
+
+.\FlvInteractiveRebase.exe build tags.xml output.flv
+```
 
 ## 编译
 
