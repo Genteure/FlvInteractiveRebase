@@ -31,5 +31,5 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: CLI-${{ matrix.rid }}-${{ matrix.build_configuration }}
+          name: FIR-${{ matrix.rid }}-${{ matrix.build_configuration }}
           path: FlvInteractiveRebase/publish/${{ matrix.rid }}

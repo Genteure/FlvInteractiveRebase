@@ -2,6 +2,10 @@
 
 一个对 FLV 文件进行 Tag 级别编辑的命令行工具
 
+## What's "Interactive Rebase"
+
+因为设计思路是参考了 git 的 `git rebase -i` 所以起名为 Flv Interactive Rebase.
+
 ## 用法
 
 ```bash
