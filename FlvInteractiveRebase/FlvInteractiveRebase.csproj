@@ -2,18 +2,23 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <LangVersion>8.0</LangVersion>
     <Nullable>Enable</Nullable>
     <Authors>Genteure</Authors>
     <Company>Genteure</Company>
     <PackageId>FlvInteractiveRebase</PackageId>
     <Product>FlvInteractiveRebase</Product>
+    <RuntimeIdentifiers>win-x64;osx-x64;osx.10.11-x64;linux-arm64;linux-arm;linux-x64</RuntimeIdentifiers>
+    <RuntimeIdentifier Condition=" '$(RuntimeIdentifier)' == 'any' "></RuntimeIdentifier>
+    <PublishDir Condition=" '$(RuntimeIdentifier)' == '' ">publish\any</PublishDir>
+    <PublishDir Condition=" '$(RuntimeIdentifier)' != '' ">publish\$(RuntimeIdentifier)</PublishDir>
+    <SelfContained Condition=" '$(RuntimeIdentifier)' == '' ">false</SelfContained>
+    <SelfContained Condition=" '$(SelfContained)' == '' ">true</SelfContained>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(SelfContained)'=='Release|true'">
     <PublishTrimmed>true</PublishTrimmed>
-    <PublishReadyToRun>false</PublishReadyToRun>
     <PublishSingleFile>true</PublishSingleFile>
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
